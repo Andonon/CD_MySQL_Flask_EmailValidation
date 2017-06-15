@@ -16,6 +16,23 @@
     <h1>Email Validation Success!</h1>      
     <p>The email address you entered ( {{ email }} )</p>
     <p>is a VALID email address! Added to DB. Thank you!</p>
+    <h2>Existing emails in database...</h2>
+    <table>
+        <tr> 
+            <th>ID:</th>
+            <th>Email:</th>
+            <th></th>
+        </tr>
+  {% for email in all_emails %}
+        <tr>
+            <td>{{ email['id'] }}</td>
+            <td>{{ email['email'] }}</td>
+            <td>{{ email['Date'] }}</td>
+            <td></td>
+        </tr>
+  {% endfor %}        
+    </table>
+
 </form>
 </body>
 </html>

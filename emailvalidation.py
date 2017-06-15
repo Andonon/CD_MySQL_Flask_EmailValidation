@@ -1,8 +1,10 @@
 import re
 from mysqlconnection import MySQLConnector
-from flask import Flask, render_template, redirect, request, flash
+from flask import Flask, render_template, redirect, request, flash, session
+#pylint: disable=C0103,C0111
 app = Flask(__name__)
-mysql = MySQLConnector(app,'emailvalidation')
+mysql = MySQLConnector(app, 'emailvalidation')
+app.secret_key = 'lkjas09a8sd098998asdsdlasdlkjasd9089'
 
 @app.route('/')
 def index():
@@ -11,23 +13,22 @@ def index():
 @app.route('/checkemail', methods=['POST'])
 def checkemail():
     if request.method == 'POST':
-        print "14 === Detected POST"
-        print "15 === request form:", request.form
-        email = request.form['email']
-        print "17 === email: ", email
-        if not re.match(r"(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)", email):
-            print "19 re did NOT match, email is valid"
-            flash = 'Invalid Email'
-            print "21 flashed error for email invalid"
-            return redirect('/')
+        session['email'] = request.form['email']
+        if not re.match(r"(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)", session['email']):
+            flash("Invalid Email Address. Please try again.")
         else:
+            query = "INSERT INTO emails (email, created_at, updated_at) values (:email, now(), now())"
+            data = {
+                'email': session['email']
+            }
+            mysql.query_db(query, data)
             return redirect('/success')
-
+    return redirect('/')
 @app.route('/success')
 def successpage():
-    query = "select email from users"
-    usersemail = mysql.query_db(query)
-    print usersemail
-    return render_template('emailvalidationsuccess.html', usersemail=usersemail)
+    query = "select id, email, concat(Month(created_at),'/',Day(created_at),'/',Year(created_at),' ',Time(created_at)) as Date from emails"
+    emails = mysql.query_db(query)
+    print emails
+    return render_template('emailvalidationsuccess.html', all_emails=emails)
 
 app.run(debug=True)
